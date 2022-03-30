@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate lazy_static;
+extern crate image;
+
 use chrono::prelude::*;
 use crossterm::{
     event::{self, Event as CEvent, KeyCode},
@@ -22,6 +26,7 @@ use tui::{
     },
     Terminal,
 };
+mod mapgen;
 
 const DB_PATH: &str = "./data/db.json";
 
@@ -69,6 +74,9 @@ impl From<MenuItem> for usize {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    
+    mapgen::createPlaneMapImage();
+
     enable_raw_mode().expect("can run in raw mode");
 
     let (tx, rx) = mpsc::channel();
@@ -142,22 +150,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     height: size.height,
                 });
 
-            let copyright = Paragraph::new("sparkline here")
-                .style(Style::default().fg(Color::LightCyan))
-                .alignment(Alignment::Center)
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .style(Style::default().fg(Color::White))
-                        .title("Heart Rate")
-                        .border_type(BorderType::Plain),
-                );
             
             let heart_rate = Sparkline::default()
             .block(Block::default().title("Heart Rate").borders(Borders::ALL))
             .data(&[0, 2, 3, 4, 1, 4, 10])
             .max(5)
-            .style(Style::default().fg(Color::Red).bg(Color::White));
+            .style(Style::default());
 
             let menu = menu_titles
                 .iter()
@@ -193,7 +191,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         match rx.recv()? {
             Event::Input(event) => match event.code {
-                KeyCode::Char('q') => {
+                KeyCode::Esc => {
                     disable_raw_mode()?;
                     terminal.show_cursor()?;
                     break;
