@@ -1,0 +1,11 @@
+[
+    {
+        "id":1,
+        "login":{
+            "username": "Samhain",
+            "password": "pass"
+        },
+        "vitals": 100,
+        "spirit": 100
+    }
+]

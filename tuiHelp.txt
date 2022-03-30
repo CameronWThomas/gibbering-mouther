@@ -1,0 +1,3 @@
+Tui widgets
+https://docs.rs/tui/latest/tui/widgets/index.html
+

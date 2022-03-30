@@ -1,0 +1,7 @@
+//following this example inintially
+https://blog.logrocket.com/rust-and-tui-building-a-command-line-interface-in-rust/
+https://github.com/zupzup/rust-commandline-example
+
+
+//ascii art util
+https://manytools.org/hacker-tools/ascii-banner/
