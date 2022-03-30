@@ -154,7 +154,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
             
             let heart_rate = Sparkline::default()
-            .block(Block::default().title("Sparkline").borders(Borders::ALL))
+            .block(Block::default().title("Heart Rate").borders(Borders::ALL))
             .data(&[0, 2, 3, 4, 1, 4, 10])
             .max(5)
             .style(Style::default().fg(Color::Red).bg(Color::White));
