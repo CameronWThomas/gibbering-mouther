@@ -10,7 +10,7 @@ use crossterm::{
 use cursive::views::Layer;
 use rand::{distributions::Alphanumeric, prelude::*};
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::{fs, net::ToSocketAddrs};
 use std::io;
 use std::sync::mpsc;
 use std::thread;
@@ -27,8 +27,10 @@ use tui::{
     Terminal,
 };
 mod mapgen;
+use mapgen::{Map, MapMeta};
 
 const DB_PATH: &str = "./data/db.json";
+const MAP_PATH: &str = "./data/map.json";
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -73,9 +75,20 @@ impl From<MenuItem> for usize {
     }
 }
 
+
+#[derive(Copy, Clone, Debug)]
+enum MapState {
+    Welcome,
+    Map,
+    Conflict,
+    Converse
+}
+
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    
-    mapgen::createPlaneMapImage();
+
+    let map = read_map().unwrap();
+    let mut active_map_state = MapState::Map;
 
     enable_raw_mode().expect("can run in raw mode");
 
@@ -183,7 +196,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             rect.render_widget(render_info_tab(&me), uiFrame[0]);
             rect.render_widget(tabs, chunks[0]);
             match active_menu_item {
-                MenuItem::Map => rect.render_widget(render_map(), chunks[1]),
+                MenuItem::Map => rect.render_widget(render_map( &active_map_state), chunks[1]),
                 MenuItem::Sheet => rect.render_widget(render_sheet(), chunks[1])
             }
             rect.render_widget(heart_rate, chunks[2]);
@@ -197,8 +210,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     break;
                 }
                 KeyCode::Char('m') => active_menu_item = MenuItem::Map,
-                KeyCode::Char('s') => active_menu_item = MenuItem::Sheet,
+                KeyCode::Char('h') => active_menu_item = MenuItem::Sheet,
                 _ => {}
+                KeyCode::Char('w') => {
+                    match active_menu_item{
+                        MenuItem::Map => {
+                            //go up
+                        }
+                        MenuItem::Sheet => todo!(),
+                    }
+                },
+                KeyCode::Char('a') => {
+                    match active_menu_item{
+                        MenuItem::Map => {
+                            //go left
+                        }
+                        MenuItem::Sheet => todo!(),
+                    }
+                },
+                KeyCode::Char('s') => {
+                    match active_menu_item{
+                        MenuItem::Map => {
+                            //go down
+                        }
+                        MenuItem::Sheet => todo!(),
+                    }
+                },
+                KeyCode::Char('d') => {
+                    match active_menu_item{
+                        MenuItem::Map => {
+                            //go right
+                        }
+                        MenuItem::Sheet => todo!(),
+                    }
+                },
+                KeyCode::Char('l')=>{
+                    //move map to draw map instead of home
+                    active_map_state = MapState::Map;
+                    println!("{:?}", active_map_state);
+                }
             },
             Event::Tick => {}
         }
@@ -226,7 +276,10 @@ fn render_info_tab<'a>(charStats: &Character) -> Paragraph<'a>{
     return home
 }
 
-fn render_map<'a>() -> Paragraph<'a> {
+fn render_map<'a>( mapState: &MapState) -> Paragraph<'a> {
+    
+    let map = read_map().unwrap();
+
     let home = Paragraph::new(vec![
         Spans::from(vec![Span::raw("")]),
         Spans::from(vec![Span::raw("Welcome")]),
@@ -247,7 +300,35 @@ fn render_map<'a>() -> Paragraph<'a> {
             .title("Map")
             .border_type(BorderType::Plain),
     );
-    home
+    
+    let mut span_vec = vec![Spans::from(vec![Span::raw("")]); map.meta.height];
+    let mut i =0;
+    for s in map.map{
+        span_vec[i] = Spans::from(vec![Span::raw(s)]);
+        i+=1;
+    }   
+    let map_view = Paragraph::new(span_vec)
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().fg(Color::White))
+                .title("Map")
+                .border_type(BorderType::Plain),
+        );
+        
+    match mapState {
+        MapState::Welcome =>{
+            return home;
+        },
+        MapState::Map => {
+            return map_view;
+        },
+        MapState::Conflict => todo!(),
+        MapState::Converse => todo!(),
+    }
+
+    return home;
 }
 
 fn render_sheet<'a>() -> Paragraph<'a> {
@@ -267,5 +348,14 @@ fn render_sheet<'a>() -> Paragraph<'a> {
             .border_type(BorderType::Plain),
     );
     home
+}
+
+fn read_map() -> Result<Map, Error>{
+
+    let db_content = fs::read_to_string(MAP_PATH)?;
+    
+    let parsed: Map = serde_json::from_str(&db_content)?;
+
+    Ok(parsed)
 }
 

@@ -3,6 +3,7 @@ use cursive::reexports::time::format_description::modifier::Period;
 use image::{ImageBuffer, Rgb};
 
 use noise::{Perlin, Seedable, NoiseFn, Fbm, utils::{PlaneMapBuilder, NoiseMapBuilder}, OpenSimplex};
+use serde::{Serialize, Deserialize};
 /* 
 fn main(){
 
@@ -13,6 +14,16 @@ fn main(){
 
 }
 */
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MapMeta{
+    pub height: usize,
+    pub width: usize
+}
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Map{
+    pub map: Vec<String>,
+    pub meta: MapMeta
+}
 
 const IMAGE_PATH: &str = "./images";
 
@@ -34,7 +45,7 @@ pub fn test_output(){
     println!("module working")
 }
 
-pub fn generate_2d_array_from_perlin() -> Vec<Vec<f64>>{
+pub fn generate_2d_array_from_noise() -> Vec<Vec<f64>>{
     let mut matrix = vec![vec![0.0; 640]; 640];
 
     let mut x = 0.0;
@@ -44,7 +55,7 @@ pub fn generate_2d_array_from_perlin() -> Vec<Vec<f64>>{
         let mut y_int = 0;
         while y < 64.0{
             
-            matrix[x_int][y_int] = 0.0;//PERLIN.get([x, y]);
+            matrix[x_int][y_int] = SEEDED_OPEN_SIMPLEX.get([x,y]);
 
             y = y + 1.1;
             y_int = y_int + 1;
@@ -56,8 +67,8 @@ pub fn generate_2d_array_from_perlin() -> Vec<Vec<f64>>{
     return matrix;
 }
 
-pub fn output_perlin(){
-    let perlinvec = generate_2d_array_from_perlin();
+pub fn output_noise(){
+    let noisevec = generate_2d_array_from_noise();
 
     println!("-----------------------------");
     println!("printing vectors");
@@ -66,7 +77,7 @@ pub fn output_perlin(){
     let mut x = 0;
     while x < 640{
         
-        let vec = &perlinvec[x];
+        let vec = &noisevec[x];
 
         println!("{:?}", vec);
         
